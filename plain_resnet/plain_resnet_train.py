@@ -110,7 +110,7 @@ def train_plain_classifier(args):
         # Checkpoint the best model
         if accuracy > best_accuracy:
             best_accuracy = accuracy
-            torch.save(model.state_dict(), "../checkpoints/best_plain_classifier.pth")
+            torch.save(model.state_dict(), "checkpoints/best_plain_classifier.pth")
             print(f"    New best model saved with accuracy: {accuracy:.2f}%")
 
     print("\n--- Training Finished ---")

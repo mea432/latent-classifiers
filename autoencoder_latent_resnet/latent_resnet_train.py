@@ -157,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--autoencoder_path",
         type=str,
-        default="../checkpoints/best_autoencoder.pth",
+        default="checkpoints/best_autoencoder.pth",
         help="Path to the trained autoencoder model file (.pth).",
     )
     parser.add_argument(
