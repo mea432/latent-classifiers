@@ -24,10 +24,10 @@ This project explores the concept of using latent space representations from an 
 └── README.md
 ```
 
--   **`autoencoder/`**: Contains the autoencoder model, training scripts, and utilities for dataset management.
--   **`autoencoder_latent_resnet/`**: Contains the ResNet model that classifies the latent space vectors from the autoencoder.
--   **`plain_resnet/`**: Contains a standard ResNet model for baseline comparison, which is trained directly on images.
--   **`checkpoints/`**: Directory to save the trained model weights.
+- **`autoencoder/`**: Contains the autoencoder model, training scripts, and utilities for dataset management.
+- **`autoencoder_latent_resnet/`**: Contains the ResNet model that classifies the latent space vectors from the autoencoder.
+- **`plain_resnet/`**: Contains a standard ResNet model for baseline comparison, which is trained directly on images.
+- **`checkpoints/`**: Directory to save the trained model weights.
 
 ## Getting Started
 
@@ -35,10 +35,10 @@ This project explores the concept of using latent space representations from an 
 
 This project requires Python 3 and the following libraries:
 
--   `torch`
--   `torchvision`
--   `Pillow`
--   `tqdm`
+- `torch`
+- `torchvision`
+- `Pillow`
+- `tqdm`
 
 You can install these dependencies using pip:
 
@@ -88,7 +88,7 @@ python -m autoencoder.autoencoder_prepare_dataset
 This will train the autoencoder and save the best model to `checkpoints/best_autoencoder.pth`.
 
 ```bash
-python -m autoencoder.autoencoder_train
+python -m autoencoder.train
 ```
 
 ### 2. Plain ResNet Classifier
@@ -98,7 +98,7 @@ python -m autoencoder.autoencoder_train
 This will train a standard ResNet classifier on your image dataset.
 
 ```bash
-python -m plain_resnet.plain_resnet_train --dataset_path /path/to/your/dataset
+python -m plain_resnet.train --dataset_path /path/to/your/dataset
 ```
 
 You can also specify other arguments like `--epochs`, `--batch_size`, and `--learning_rate`.
@@ -106,7 +106,7 @@ You can also specify other arguments like `--epochs`, `--batch_size`, and `--lea
 **b) Evaluate the Classifier:**
 
 ```bash
-python -m plain_resnet.plain_resnet_evaluate --dataset_path /path/to/your/dataset
+python -m plain_resnet.evaluate --dataset_path /path/to/your/dataset
 ```
 
 ### 3. Autoencoder Latent ResNet Classifier
@@ -116,7 +116,7 @@ python -m plain_resnet.plain_resnet_evaluate --dataset_path /path/to/your/datase
 This will train the ResNet classifier on the latent space representations from the autoencoder.
 
 ```bash
-python -m autoencoder_latent_resnet.latent_resnet_train --dataset_path /path/to/your/dataset --autoencoder_path checkpoints/best_autoencoder.pth
+python -m autoencoder_latent_resnet.train --dataset_path /path/to/your/dataset --autoencoder_path checkpoints/best_autoencoder.pth
 ```
 
 You can also specify other arguments like `--epochs`, `--batch_size`, and `--learning_rate`.
@@ -124,5 +124,5 @@ You can also specify other arguments like `--epochs`, `--batch_size`, and `--lea
 **b) Evaluate the Classifier:**
 
 ```bash
-python -m autoencoder_latent_resnet.latent_resnet_evaluate --dataset_path /path/to/your/dataset --autoencoder_path checkpoints/best_autoencoder.pth
+python -m autoencoder_latent_resnet.evaluate --dataset_path /path/to/your/dataset --autoencoder_path checkpoints/best_autoencoder.pth
 ```
