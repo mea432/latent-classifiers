@@ -143,14 +143,14 @@ def train():
         # --- 4. Checkpoint the best model ---
         if avg_valid_loss < best_valid_loss:
             best_valid_loss = avg_valid_loss
-            torch.save(model.state_dict(), "checkpoints/best_autoencoder.pth")
+            torch.save(model.state_dict(), "../checkpoints/best_autoencoder.pth")
             print(
                 f"    New best model saved with validation loss: {best_valid_loss:.4f}"
             )
 
     print("\n--- Training Finished ---")
     print(f"Best validation loss achieved: {best_valid_loss:.4f}")
-    print("Best model saved to 'checkpoints/best_autoencoder.pth'")
+    print("Best model saved to '../checkpoints/best_autoencoder.pth'")
 
 
 if __name__ == "__main__":
