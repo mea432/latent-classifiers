@@ -7,7 +7,7 @@ from PIL import Image
 
 from tqdm import tqdm
 
-from autoencoder import Autoencoder
+from autoencoder.autoencoder import Autoencoder
 
 # --- 1. Dataset Loading and Preprocessing ---
 

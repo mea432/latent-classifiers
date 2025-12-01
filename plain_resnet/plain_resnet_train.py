@@ -8,7 +8,7 @@ import argparse
 
 from tqdm import tqdm
 
-from plain_resnet import PlainResNetClassifier
+from plain_resnet.plain_resnet import PlainResNetClassifier
 
 
 def train_plain_classifier(args):

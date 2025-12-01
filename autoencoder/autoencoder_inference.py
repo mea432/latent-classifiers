@@ -4,7 +4,7 @@ from PIL import Image
 import argparse
 import os
 
-from autoencoder import Autoencoder
+from autoencoder.autoencoder import Autoencoder
 
 
 def run_inference(args):

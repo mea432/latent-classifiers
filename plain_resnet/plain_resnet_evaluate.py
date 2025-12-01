@@ -5,7 +5,7 @@ import os
 import argparse
 import time
 
-from plain_resnet import PlainResNetClassifier
+from plain_resnet.plain_resnet import PlainResNetClassifier
 
 
 def evaluate_plain_classifier(args):
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--classifier_path",
         type=str,
-        default="../checkpoints/best_plain_classifier.pth",
+        default="checkpoints/best_plain_classifier.pth",
         help="Path to the best trained plain classifier model file (.pth).",
     )
     parser.add_argument(
