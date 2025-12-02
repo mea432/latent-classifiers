@@ -7,18 +7,18 @@ This project explores the concept of using latent space representations from an 
 ```
 ├── autoencoder/
 │   ├── autoencoder.py
-│   ├── autoencoder_train.py
+│   ├── train.py
 │   ├── autoencoder_download_dataset.py
 │   ├── autoencoder_prepare_dataset.py
-│   └── autoencoder_inference.py
+│   └── inference.py
 ├── autoencoder_latent_resnet/
 │   ├── latent_resnet.py
-│   ├── latent_resnet_train.py
-│   └── latent_resnet_evaluate.py
+│   ├── train.py
+│   └── evaluate.py
 ├── plain_resnet/
 │   ├── plain_resnet.py
-│   ├── plain_resnet_train.py
-│   └── plain_resnet_evaluate.py
+│   ├── train.py
+│   └── evaluate.py
 ├── checkpoints/
 │   └── (empty)
 └── README.md
