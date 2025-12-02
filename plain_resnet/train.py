@@ -115,7 +115,7 @@ def train_plain_classifier(args):
 
     print("\n--- Training Finished ---")
     print(f"Best validation accuracy achieved: {best_accuracy:.2f}%")
-    print("Best model saved to 'best_plain_classifier.pth'")
+    print("Best model saved to 'checkpoints/best_plain_classifier.pth'")
 
 
 if __name__ == "__main__":
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--learning_rate",
         type=float,
-        default=1e-3,
+        default=1e-4,
         help="Learning rate for the optimizer.",
     )
 

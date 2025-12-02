@@ -39,7 +39,7 @@ def train_classifier(args):
     print("Encoder loaded and frozen.")
 
     # 2. Set up data loaders
-    image_size = 256  # Should match the autoencoder's training
+    image_size = 224  # Should match the autoencoder's training
     transform = transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--learning_rate",
         type=float,
-        default=1e-3,
+        default=1e-4,
         help="Learning rate for the optimizer.",
     )
 

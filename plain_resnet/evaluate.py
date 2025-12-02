@@ -90,6 +90,9 @@ def evaluate_plain_classifier(args):
     print("\n--- Evaluation Results ---")
     print(f"Test Accuracy: {accuracy:.2f}%")
     print(f"Average Inference Time per Batch: {avg_inference_time * 1000:.4f} ms")
+    print(
+        f"Average Inference Time per Image: {avg_inference_time / args.batch_size * 1000:.4f} ms"
+    )
     print("--------------------------")
 
 

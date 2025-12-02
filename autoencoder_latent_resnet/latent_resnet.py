@@ -33,9 +33,9 @@ class LatentResNetClassifier(nn.Module):
             in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
         )
 
-        # 2. Adapt for small input resolutions (e.g., 16x16).
+        # 2. Adapt for small input resolutions (e.g., 14x14).
         # The original maxpool layer (kernel_size=3, stride=2) is too aggressive
-        # for a 16x16 feature map. We replace it with an identity layer,
+        # for a 14x14 feature map. We replace it with an identity layer,
         # effectively removing it to preserve dimensions.
         self.resnet.maxpool = nn.Identity()
 
@@ -50,7 +50,7 @@ class LatentResNetClassifier(nn.Module):
         Args:
             x (torch.Tensor): The input tensor from the encoder, expected to have
                               a shape of (Batch, in_channels, H, W),
-                              e.g., (4, 192, 16, 16).
+                              e.g., (4, 192, 14, 14).
         """
         return self.resnet(x)
 
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     # --- Example Usage ---
 
     # This dummy tensor simulates the output of our autoencoder's encoder
-    # It has a batch size of 4, 192 channels, and a 16x16 resolution.
-    latent_space_tensor = torch.randn(4, 192, 16, 16)
+    # It has a batch size of 4, 192 channels, and a 14x14 resolution.
+    latent_space_tensor = torch.randn(4, 192, 14, 14)
 
     # Create the classifier for a 10-class problem
     classifier = LatentResNetClassifier(num_classes=10, in_channels=192)

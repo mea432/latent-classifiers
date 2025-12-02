@@ -4,95 +4,89 @@ import torch.nn.functional as F
 from torch.nn import Module, Parameter
 
 
-class GDN(Module):
+class GDN(nn.Module):
     """
-    Generalized Divisive Normalization.
-    y[i] = x[i] / sqrt(beta[i] + sum_j(gamma[j, i] * x[j]^2))
-
-    Reference:
-    "Density Modeling of Images using a Generalized Divisive Normalization"
-    Johannes Ballé, Valero Laparra, Eero P. Simoncelli
-    https://arxiv.org/abs/1511.06281
-
-    This implementation is based on the one found in the paper's official repo:
-    https://github.com/tensorflow/compression/blob/master/tensorflow_compression/python/layers/gdn.py
-    and a PyTorch implementation:
-    https://github.com/jorge-pessoa/pytorch-gdn
+    Official GDN/IGDN from Ballé/Minnen (tensorflow/compression version).
+    Uses:
+      - lower-triangular reparam for gamma
+      - softplus for positivity
+      - pedestal offset for stability
     """
 
     def __init__(
-        self, ch, inverse=False, beta_min=1e-6, gamma_init=0.1, reparam_offset=2**-18
+        self,
+        channels,
+        inverse=False,
+        beta_min=1e-6,
+        gamma_init=0.1,
+        reparam_offset=2**-18,
     ):
-        super(GDN, self).__init__()
+        super().__init__()
+
         self.inverse = inverse
+        self.channels = channels
         self.beta_min = beta_min
         self.gamma_init = gamma_init
         self.reparam_offset = reparam_offset
 
-        self.build(ch)
+        # Pedestal ensures strictly positive pre-activation
+        pedestal = reparam_offset**2
+        self.pedestal = pedestal
 
-    def build(self, ch):
-        self.pedestal = self.reparam_offset**2
-        self.beta_bound = (self.beta_min + self.reparam_offset**2) ** 0.5
-        self.gamma_bound = self.reparam_offset
+        # Reparameterized beta: stored as sqrt form
+        beta = torch.sqrt(torch.ones(channels) + pedestal)
+        self.beta = nn.Parameter(beta)
 
-        # Create beta param
-        beta = torch.sqrt(torch.ones(ch) + self.pedestal)
-        self.beta = Parameter(beta)
+        # Reparameterized gamma: lower triangular sqrt matrix
+        # gamma_init * I but in sqrt-space
+        eye = torch.eye(channels)
+        g = gamma_init * eye + pedestal
+        self.gamma = nn.Parameter(torch.sqrt(g))
 
-        # Create gamma param
-        eye = torch.eye(ch)
-        g = self.gamma_init * eye
-        g = g + self.pedestal
-        gamma = torch.sqrt(g)
-        self.gamma = Parameter(gamma)
+        # Mask for lower-triangular only
+        self.register_buffer("gamma_mask", torch.tril(torch.ones(channels, channels)))
 
     def forward(self, x):
-        unfold = False
-        if x.dim() == 3:
-            x = x.unsqueeze(-1)
-            unfold = True
+        # ensure positivity using softplus
+        beta = F.softplus(self.beta) ** 2 - self.pedestal
+        beta = torch.clamp(beta, min=self.beta_min)
 
-        _, ch, _, _ = x.size()
+        # gamma: softplus squared -> full matrix -> mask to lower-triangular
+        gamma = F.softplus(self.gamma) ** 2 - self.pedestal
+        gamma = gamma * self.gamma_mask  # enforce lower-triangular
 
-        # Beta bound and reparam
-        beta = self.beta
-        beta = F.softplus(beta) - self.beta_bound + self.beta_min
+        # reshape for 1x1 conv
+        gamma = gamma.view(self.channels, self.channels, 1, 1)
 
-        # Gamma bound and reparam
-        gamma = self.gamma
-        gamma = gamma**2 - self.pedestal
-        gamma = gamma.view(ch, ch, 1, 1)
-
-        norm_pool = F.conv2d(x**2, gamma, beta, stride=1, padding=0)
-        norm_pool = torch.sqrt(norm_pool)
+        # compute normalization denominator
+        norm = F.conv2d(x**2, gamma, beta)
+        norm = torch.sqrt(norm)
 
         if self.inverse:
-            x_out = x * norm_pool
+            return x * norm
         else:
-            x_out = x / norm_pool
+            return x / norm
 
-        if unfold:
-            x_out = x_out.squeeze(-1)
-        return x_out
+
+class IGDN(GDN):
+    """Inverse GDN is just GDN with inverse=True."""
+
+    def __init__(self, channels, **kwargs):
+        super().__init__(channels, inverse=True, **kwargs)
 
 
 class Encoder(nn.Module):
-    """
-    The Encoder part of the autoencoder.
-    """
-
     def __init__(self, in_channels=3):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.sequential = nn.Sequential(
-            nn.Conv2d(in_channels, 192, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(in_channels, 192, 5, stride=2, padding=2),
             GDN(192),
-            nn.Conv2d(192, 192, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(192, 192, 5, stride=2, padding=2),
             GDN(192),
-            nn.Conv2d(192, 192, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(192, 192, 5, stride=2, padding=2),
             GDN(192),
-            nn.Conv2d(192, 192, kernel_size=5, stride=2, padding=2),
-            GDN(192),
+            nn.Conv2d(192, 192, 5, stride=2, padding=2),
+            # final layer: NO GDN (linear)
         )
 
     def forward(self, x):
@@ -100,29 +94,19 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """
-    The Decoder part of the autoencoder.
-    """
-
     def __init__(self, out_channels=3):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.sequential = nn.Sequential(
-            nn.ConvTranspose2d(
-                192, 192, kernel_size=5, stride=2, padding=2, output_padding=1
-            ),
+            nn.ConvTranspose2d(192, 192, 5, stride=2, padding=2, output_padding=1),
+            GDN(192, inverse=True),
+            nn.ConvTranspose2d(192, 192, 5, stride=2, padding=2, output_padding=1),
+            GDN(192, inverse=True),
+            nn.ConvTranspose2d(192, 192, 5, stride=2, padding=2, output_padding=1),
             GDN(192, inverse=True),
             nn.ConvTranspose2d(
-                192, 192, kernel_size=5, stride=2, padding=2, output_padding=1
+                192, out_channels, 5, stride=2, padding=2, output_padding=1
             ),
-            GDN(192, inverse=True),
-            nn.ConvTranspose2d(
-                192, 192, kernel_size=5, stride=2, padding=2, output_padding=1
-            ),
-            GDN(192, inverse=True),
-            nn.ConvTranspose2d(
-                192, out_channels, kernel_size=5, stride=2, padding=2, output_padding=1
-            ),
-            GDN(out_channels, inverse=True),
+            # final layer: NO IGDN (linear)
         )
 
     def forward(self, x):
